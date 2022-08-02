@@ -58,9 +58,10 @@
 --select min(orderdate) from orders
 
 
---16 Countries where there are customers
+--16.1 Countries where there are customers
 --select distinct ShipCountry from orders order by ShipCountry
 
+--16.2
 --select ShipCountry from orders group by ShipCountry order by ShipCountry
 
 
@@ -69,18 +70,22 @@
 
 
 --18 Products with associated supplier names
---select p.ProductID, p.ProductName, s.CompanyName 
---from Products p
---join Suppliers s 
---on p.SupplierID = s.SupplierID
---order by p.ProductID
+/*
+select p.ProductID, p.ProductName, s.CompanyName 
+from Products p
+join Suppliers s 
+on p.SupplierID = s.SupplierID
+order by p.ProductID
+*/
 
 
 --19 Orders and the Shipper that was used
---select OrderID, convert(date, OrderDate) orderdate, companyname 
---from orders o
---join Shippers s
---on o.ShipVia = s.ShipperID
---where orderid < 10300
---order by OrderID
+/*
+select OrderID, convert(date, OrderDate) orderdate, companyname 
+from orders o
+join Shippers s
+on o.ShipVia = s.ShipperID
+where orderid < 10300
+order by OrderID
+*/
 
