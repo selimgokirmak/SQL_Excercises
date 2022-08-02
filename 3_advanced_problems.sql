@@ -26,7 +26,8 @@ order by TotalOrderAmount desc
 
 --34 High-value customers - with discount
 /*
-select c.CustomerID, c.CompanyName, sum(od.UnitPrice * od.Quantity) TotalWithoutDiscount, sum(od.UnitPrice * od.Quantity * (1- od.Discount)) TotalWithDiscount
+select c.CustomerID, c.CompanyName, 
+sum(od.UnitPrice * od.Quantity) TotalWithoutDiscount, sum(od.UnitPrice * od.Quantity * (1- od.Discount)) TotalWithDiscount
 from Customers c
 join orders o on c.CustomerID = o.CustomerID
 join OrderDetails od on o.orderid = od.OrderID
@@ -80,11 +81,11 @@ order by od.OrderID
 select OrderID, ProductID, UnitPrice, Quantity, Discount
 from OrderDetails
 where orderid in (select od.orderid
-					from OrderDetails od
-					join orders o on od.OrderID = o.OrderID
-					where od.Quantity >= 60
-					group by od.OrderID, od.Quantity
-					having count(*) > 1)
+				  from OrderDetails od
+				  join orders o on od.OrderID = o.OrderID
+				  where od.Quantity >= 60
+				  group by od.OrderID, od.Quantity
+				  having count(*) > 1)
 */
 
 
