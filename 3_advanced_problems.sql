@@ -119,10 +119,11 @@ order by TotalLateOrders desc
 
 --43.1 Late orders vs. total orders
 /*
-select o.EmployeeID, e.LastName, (select count(*)
-								  from orders
-								  where EmployeeID=o.EmployeeID
-								  group by EmployeeID) AllOrders, 
+select o.EmployeeID, e.LastName, 
+ (select count(*)
+  from orders
+  where EmployeeID=o.EmployeeID
+  group by EmployeeID) AllOrders, 
 count(*) TotalLateOrders
 from orders o
 join Employees e on o.EmployeeID=e.EmployeeID
