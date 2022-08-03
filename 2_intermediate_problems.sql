@@ -79,7 +79,7 @@ order by avgfreight desc
 /*
 select top 3 ShipCountry, avg(freight) avgfreight
 from orders
-where orderdate > (select dateadd(yy, -1, (select max(orderdate) from orders)))
+where orderdate >= dateadd(yy, -1, (select max(orderdate) from orders))
 group by ShipCountry
 order by avgfreight desc
 */
@@ -92,6 +92,7 @@ from Employees e
 join orders o on e.EmployeeID = o.employeeid
 join OrderDetails od on o.OrderID = od.OrderID
 join Products p on od.ProductID = p.ProductID
+order by o.OrderID, p.ProductID
 */
 
 
@@ -111,7 +112,7 @@ where o.OrderID is null
 */
 
 
---31 Customers with no orders for EmployeeID 4
+--31.1 Customers with no orders for EmployeeID 4
 /*
 select CustomerID
 from Customers
@@ -121,3 +122,13 @@ from orders
 where EmployeeID = 4
 */
 
+--31.2
+/*
+with emp4_cte as
+(select CustomerID from orders where EmployeeID = 4)
+
+select c.CustomerID, e.CustomerID
+from Customers c
+left join emp4_cte e on c.CustomerID = e.CustomerID
+where e.CustomerID is null
+*/
