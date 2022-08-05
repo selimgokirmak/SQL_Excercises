@@ -66,26 +66,23 @@ order by NEWID()
 
 --38 Orders - accidental double-entry
 /*
-select od.orderid, od.Quantity, count(*)
-from OrderDetails od
-join orders o on od.OrderID = o.OrderID
-where od.Quantity >= 60
-group by od.OrderID, od.Quantity
+select OrderID
+from OrderDetails
+where Quantity >= 60
+group by OrderID, Quantity
 having count(*) > 1
-order by od.OrderID
 */
 
 
 --39 Orders - accidental double-entry details
 /*
-select OrderID, ProductID, UnitPrice, Quantity, Discount
+select *
 from OrderDetails
-where orderid in (select od.orderid
-				  from OrderDetails od
-				  join orders o on od.OrderID = o.OrderID
-				  where od.Quantity >= 60
-				  group by od.OrderID, od.Quantity
-				  having count(*) > 1)
+where OrderID in (select OrderID
+					from OrderDetails
+					where Quantity >= 60
+					group by OrderID, Quantity
+					having count(*) > 1)
 */
 
 
@@ -93,7 +90,11 @@ where orderid in (select od.orderid
 /*
 Select OrderDetails.OrderID ,ProductID ,UnitPrice ,Quantity ,Discount 
 From OrderDetails 
-Join ( Select distinct OrderID From OrderDetails Where Quantity >= 60 Group By OrderID, Quantity Having Count(*) > 1 ) PotentialProblemOrders 
+Join ( Select Distinct OrderID 
+		From OrderDetails 
+		Where Quantity >= 60 
+		Group By OrderID, Quantity 
+		Having Count(*) > 1 ) PotentialProblemOrders 
 on PotentialProblemOrders.OrderID = OrderDetails.OrderID 
 Order by OrderID, ProductID
 */
@@ -131,100 +132,106 @@ join Employees e on o.EmployeeID=e.EmployeeID
 where ShippedDate >= RequiredDate
 group by o.EmployeeID, e.LastName
 */
+
 --43.2
 /*
-with allorders_cte (EmployeeID, allorders) as
-(select EmployeeId, count(*) 
- from orders 
- group by EmployeeId),
+with all_orders as
+( select EmployeeID, count(*) AllOrders
+from Orders 
+group by EmployeeID ),
 
-lateorders_cte (EmployeeID, lateorders) as
-(select EmployeeID, COUNT(*)
- from orders
- where ShippedDate >= RequiredDate
- group by EmployeeID)
+late_orders as
+( select EmployeeID, count(*) LateOrders
+from Orders 
+where ShippedDate >= RequiredDate
+group by EmployeeID )
 
-select ao.EmployeeID, ao.allorders, lo.lateorders
-from allorders_cte ao
-join lateorders_cte lo on ao.EmployeeID=lo.EmployeeID
+select ao.EmployeeID, e.LastName, ao.AllOrders, lo.LateOrders
+from all_orders ao
+join late_orders lo on ao.EmployeeID = lo.EmployeeID
+join Employees e on ao.EmployeeID = e.EmployeeID
 */
 
 
 --44 Late orders vs. total orders - missing employee
 /*
-with allorders_cte (EmployeeID, allorders) as
-(select EmployeeId, count(*) 
- from orders 
- group by EmployeeId),
+with all_orders as
+( select EmployeeID, count(*) AllOrders
+from Orders 
+group by EmployeeID ),
 
-lateorders_cte (EmployeeID, lateorders) as
-(select EmployeeID, COUNT(*)
- from orders
- where ShippedDate >= RequiredDate
- group by EmployeeID)
+late_orders as
+( select EmployeeID, count(*) LateOrders
+from Orders 
+where ShippedDate >= RequiredDate
+group by EmployeeID )
 
-select ao.EmployeeID, ao.allorders, lo.lateorders
-from allorders_cte ao
-left join lateorders_cte lo on ao.EmployeeID=lo.EmployeeID
+select ao.EmployeeID, e.LastName, ao.AllOrders, lo.LateOrders
+from all_orders ao
+left join late_orders lo on ao.EmployeeID = lo.EmployeeID
+join Employees e on ao.EmployeeID = e.EmployeeID
 */
 
 
 --45 Late orders vs. total orders - fix null
 /*
-with allorders_cte (EmployeeID, allorders) as
-(select EmployeeId, count(*) 
- from orders 
- group by EmployeeId),
+with all_orders as
+( select EmployeeID, count(*) AllOrders
+from Orders 
+group by EmployeeID ),
 
-lateorders_cte (EmployeeID, lateorders) as
-(select EmployeeID, COUNT(*)
- from orders
- where ShippedDate >= RequiredDate
- group by EmployeeID)
+late_orders as
+( select EmployeeID, count(*) LateOrders
+from Orders 
+where ShippedDate >= RequiredDate
+group by EmployeeID )
 
-select ao.EmployeeID, ao.allorders, isnull(lo.lateorders,0) lateorders
-from allorders_cte ao
-left join lateorders_cte lo on ao.EmployeeID=lo.EmployeeID
+select ao.EmployeeID, e.LastName, ao.AllOrders, isnull(lo.LateOrders, 0)
+from all_orders ao
+left join late_orders lo on ao.EmployeeID = lo.EmployeeID
+join Employees e on ao.EmployeeID = e.EmployeeID
 */
 
 
 --46 Late orders vs. total orders - percentage
 /*
-with allorders_cte (EmployeeID, allorders) as
-(select EmployeeId, count(*) 
- from orders 
- group by EmployeeId),
+with all_orders as
+( select EmployeeID, count(*) AllOrders
+from Orders 
+group by EmployeeID ),
 
-lateorders_cte (EmployeeID, lateorders) as
-(select EmployeeID, COUNT(*)
- from orders
- where ShippedDate >= RequiredDate
- group by EmployeeID)
+late_orders as
+( select EmployeeID, count(*) LateOrders
+from Orders 
+where ShippedDate >= RequiredDate
+group by EmployeeID )
 
-select ao.EmployeeID, ao.allorders, isnull(lo.lateorders,0) lateorders,
-	(isnull(lo.lateorders,0) * 1.00 / ao.allorders) * 100 PercentLateOrders
-from allorders_cte ao
-left join lateorders_cte lo on ao.EmployeeID=lo.EmployeeID
+select ao.EmployeeID, e.LastName, ao.AllOrders, isnull(lo.LateOrders, 0), 
+(convert(float, isnull(lo.LateOrders, 0)) / ao.AllOrders) * 100 PercentLateOrders
+from all_orders ao
+left join late_orders lo on ao.EmployeeID = lo.EmployeeID
+join Employees e on ao.EmployeeID = e.EmployeeID
 */
 
 
 --47 Late orders vs. total orders - fix decimal
 /*
-with allorders_cte (EmployeeID, allorders) as
-(select EmployeeId, count(*) 
- from orders 
- group by EmployeeId),
+with all_orders as
+( select EmployeeID, count(*) AllOrders
+from Orders 
+group by EmployeeID ),
 
-lateorders_cte (EmployeeID, lateorders) as
-(select EmployeeID, COUNT(*)
- from orders
- where ShippedDate >= RequiredDate
- group by EmployeeID)
+late_orders as
+( select EmployeeID, count(*) LateOrders
+from Orders 
+where ShippedDate >= RequiredDate
+group by EmployeeID )
 
-select ao.EmployeeID, ao.allorders, isnull(lo.lateorders,0) lateorders,
-	convert(decimal(10,2), (isnull(lo.lateorders,0) * 1.00 / ao.allorders) * 100) PercentLateOrders
-from allorders_cte ao
-left join lateorders_cte lo on ao.EmployeeID=lo.EmployeeID
+select ao.EmployeeID, e.LastName, ao.AllOrders, isnull(lo.LateOrders, 0), 
+convert(decimal(10,2), (convert(float, isnull(lo.LateOrders, 0)) / ao.AllOrders) * 100) PercentLateOrders
+from all_orders ao
+left join late_orders lo on ao.EmployeeID = lo.EmployeeID
+join Employees e on ao.EmployeeID = e.EmployeeID
 */
 
 
@@ -239,12 +246,12 @@ where year(o.OrderDate) = 2016
 group by o.CustomerID, c.CompanyName)
 
 select *,
-case
-when TotalOrderAmount < 1000 then 'low'
-when TotalOrderAmount < 5000 then 'medium'
-when TotalOrderAmount < 10000 then 'high'
-when TotalOrderAmount > 10000 then 'very high'
-end as CustomerGroup
+	case
+	when TotalOrderAmount < 1000 then 'low'
+	when TotalOrderAmount < 5000 then 'medium'
+	when TotalOrderAmount < 10000 then 'high'
+	when TotalOrderAmount > 10000 then 'very high'
+	end as CustomerGroup
 from totalorderamount_cte
 */
 
@@ -353,6 +360,26 @@ order by ShipCountry
 
 
 --56 Customers with multiple orders in 5 day period
+/*
+select o1.CustomerID, o1.OrderID InitialOrderID, convert(date, o1.OrderDate) InitialOrderDate,
+	o2.OrderID NextOrderID, CONVERT(date, o2.OrderDate) NextOrderDate
+from Orders o1
+	join Orders o2 on o1.CustomerID = o2.CustomerID
+where o1.OrderID < o2.OrderID 
+	and DATEDIFF(dd, o1.OrderDate, o2.OrderDate) <= 5
+order by o1.CustomerID, o1.OrderID
+*/
 
 
 --57 Customers with multiple orders in 5 day period, version 2
+/*
+with orders_cte as (
+select CustomerID, OrderDate,
+	LEAD(Orderdate) over(partition by customerid order by CustomerID, OrderDate) NextOrderDate
+from Orders )
+
+select CustomerID, OrderDate, NextOrderDate,
+	DATEDIFF(dd, OrderDate, NextOrderDate) DaysBetweenOrders
+from orders_cte
+where DATEDIFF(dd, OrderDate, NextOrderDate) <= 5
+*/
