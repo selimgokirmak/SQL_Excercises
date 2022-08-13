@@ -59,6 +59,7 @@ join noc_regions nr
 order by 1
 */
 
+
 -- Identify the sport which was played in all summer olympics.
 /*
 select sport, count(distinct games) no_of_games,
@@ -106,62 +107,124 @@ and Medal = 'Gold'
 */
 
 
--- Find the Ratio of male and female athletes participated in all olympic games.
+-- Fetch the top 5 athletes who have won the most gold medals.
+/*
+select Name, Team, COUNT(*) total_gold_medals
+from olympics_history
+where Medal = 'Gold'
+group by Name, Team
+order by COUNT(*) desc, Name
+offset 0 rows
+fetch first 5 rows only
+*/
 
 
+-- Fetch the top 5 athletes who have won the most medals (gold/silver/bronze).
+/*
+select Top 5 Name, Team, COUNT(*) total_medals
+from olympics_history
+where Medal in ('Gold', 'Silver', 'Bronze')
+group by Name, Team
+order by 3 desc, 1
+*/
 
 
+-- Fetch the top 5 most successful countries in olympics. Success is defined by no of medals won.
+/*
+select TOP 5 nr.region, COUNT(*) total_medals,
+	RANK() OVER(order by COUNT(*) desc) rank_
+from olympics_history oh
+join noc_regions nr 
+  on oh.NOC = nr.NOC
+where Medal in ('Gold', 'Silver', 'Bronze')
+group by nr.region
+order by 2 desc
+*/
 
 
+-- List down total gold, silver and bronze medals won by each country.
+/*
+with medals_cte as (
+	select nr.region, oh.Medal
+	from olympics_history oh
+	join noc_regions nr 
+	  on oh.NOC = nr.NOC )
+   
+select region,
+	(select COUNT(*) from medals_cte where region = mc.region and Medal = 'Gold') Gold,
+	(select COUNT(*) from medals_cte where region = mc.region and Medal = 'Silver') Silver,
+	(select COUNT(*) from medals_cte where region = mc.region and Medal = 'Bronze') Bronze
+from medals_cte mc
+where Medal <> 'NA'
+group by region
+order by 2 desc, 3 desc, 4 desc
+*/
 
 
+-- List down total gold, silver and bronze medals won by each country corresponding to each olympic games.
+/*
+with medals_cte as (
+	select oh.games, nr.region, oh.Medal
+	from olympics_history oh
+	join noc_regions nr 
+	  on oh.NOC = nr.NOC )
+   
+select games, region,
+	(select COUNT(*) from medals_cte where region = mc.region and Games = mc.Games and Medal = 'Gold') Gold,
+	(select COUNT(*) from medals_cte where region = mc.region and Games = mc.Games and Medal = 'Silver') Silver,
+	(select COUNT(*) from medals_cte where region = mc.region and Games = mc.Games and Medal = 'Bronze') Bronze
+from medals_cte mc
+where Medal <> 'NA'
+group by games, region
+order by 1, 2
+*/
 
 
+-- Which countries have never won gold medal but have won silver/bronze medals?
+/*
+create view medals_view as 
+with medals_cte as (
+	select oh.games, nr.region, oh.Medal
+	from olympics_history oh
+	join noc_regions nr 
+	  on oh.NOC = nr.NOC )
+   
+select games, region,
+	(select COUNT(*) from medals_cte where region = mc.region and Games = mc.Games and Medal = 'Gold') Gold,
+	(select COUNT(*) from medals_cte where region = mc.region and Games = mc.Games and Medal = 'Silver') Silver,
+	(select COUNT(*) from medals_cte where region = mc.region and Games = mc.Games and Medal = 'Bronze') Bronze
+from medals_cte mc
+where Medal <> 'NA'
+group by games, region
 
 
+select region, sum(Gold) gold, sum(Silver) silver, sum(Bronze) bronze
+from medals_view
+group by region
+having sum(Gold) = 0 and (sum(Silver) > 0 or sum(Bronze) > 0)
+order by 3 desc
+*/
 
 
+-- In which Sport/event, India has won highest medals?
+/*
+select TOP 1 oh.Sport, COUNT(*) total_medals
+from olympics_history oh
+join noc_regions nr 
+  on oh.NOC = nr.NOC
+where nr.region = 'India' and oh.Medal <> 'NA'
+group by oh.Sport
+order by 2 desc
+*/
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- Break down all olympic games where India won medal for Hockey and how many medals in each olympic games.
+/*
+select nr.region, oh.Sport, oh.Games, COUNT(*) total_medals
+from olympics_history oh
+join noc_regions nr 
+  on oh.NOC = nr.NOC
+where nr.region = 'India' and oh.Sport = 'Hockey' and Medal <> 'NA'
+group by nr.region, oh.Sport, oh.Games
+order by 4 desc
+*/
