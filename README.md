@@ -1,3 +1,3 @@
 # SQL_Excercises
 
-SQL öğrenirken yaptığım alıştırmalar.
+This repository holds SQL exercises that i did while learning SQL.
